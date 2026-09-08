@@ -1,0 +1,28 @@
+{
+  "name": "wedamate",
+  "version": "1.0.0",
+  "description": "WedaMate - Sri Lankan Local Services & Drive My Vehicle Marketplace",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run server\" \"npm run client\"",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build",
+    "start": "node server/src/server.js",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "mern",
+    "marketplace",
+    "sri-lanka",
+    "local-services",
+    "drive-my-vehicle"
+  ],
+  "author": "WedaMate Team",
+  "license": "MIT"
+}

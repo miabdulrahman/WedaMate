@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  wedamate-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wedamate-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongo:27017/wedamate
+      - JWT_SECRET=wedamate_super_secret_jwt_key_production_2026
+      - CLIENT_URL=http://localhost:5000
+    depends_on:
+      - mongo
+    volumes:
+      - wedamate_uploads:/app/server/uploads
+
+  mongo:
+    image: mongo:7.0
+    container_name: wedamate-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+  wedamate_uploads:
