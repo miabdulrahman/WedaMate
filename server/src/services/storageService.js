@@ -5,10 +5,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const isVercel = !!process.env.VERCEL;
+
 export class StorageService {
   constructor() {
     this.provider = process.env.STORAGE_PROVIDER || 'local';
-    this.uploadDir = path.join(__dirname, '../../uploads');
+
+    // Vercel has a read-only filesystem — use /tmp for ephemeral uploads
+    const baseDir = isVercel ? '/tmp' : path.join(__dirname, '../../uploads');
+    this.uploadDir = baseDir;
     this.publicDir = path.join(this.uploadDir, 'public');
     this.protectedDir = path.join(this.uploadDir, 'protected'); // For sensitive KYC verification documents
 

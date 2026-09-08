@@ -22,6 +22,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import verificationRoutes from './routes/verificationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 import { errorHandler } from './middleware/error.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
@@ -98,6 +99,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Catch-all 404 for undefined API routes
 app.use('/api/*', (req, res) => {

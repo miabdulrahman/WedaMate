@@ -1,7 +1,13 @@
 {
   "version": 2,
+  "installCommand": "npm install && npm --prefix server install && npm --prefix client install",
   "buildCommand": "npm --prefix client run build",
   "outputDirectory": "client/dist",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
