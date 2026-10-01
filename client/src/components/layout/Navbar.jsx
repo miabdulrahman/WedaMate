@@ -67,7 +67,11 @@ export const Navbar = () => {
       if (locationRef.current && !locationRef.current.contains(e.target)) setLocationDropdownOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const getDashboardPath = () => {
@@ -180,7 +184,12 @@ export const Navbar = () => {
 
             <button
               type="button"
-              onClick={() => setSearchModalOpen(true)}
+              onClick={() => {
+                setSearchModalOpen(true);
+                setNotifDropdownOpen(false);
+                setUserDropdownOpen(false);
+                setMobileMenuOpen(false);
+              }}
               className="p-2 rounded-lg border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--primary-soft)] transition-colors cursor-pointer"
               aria-label="Quick Search"
             >
@@ -192,7 +201,11 @@ export const Navbar = () => {
                 <div className="relative" ref={notifRef}>
                   <button
                     type="button"
-                    onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                    onClick={() => {
+                      setNotifDropdownOpen((prev) => !prev);
+                      setUserDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
                     className="relative p-2 rounded-lg border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--primary-soft)] transition-colors cursor-pointer"
                     aria-label="Notifications"
                   >
@@ -205,9 +218,16 @@ export const Navbar = () => {
                   </button>
 
                   {notifDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-[var(--border)] overflow-hidden z-50 animate-fade-in">
-                      <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
-                        <h4 className="font-heading font-bold text-[var(--ink)] text-sm">Notifications</h4>
+                    <div className="fixed left-3 right-3 top-[4.5rem] sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-2 sm:w-96 max-w-md sm:max-w-none mx-auto sm:mx-0 bg-white rounded-xl shadow-2xl border border-[var(--border)] overflow-hidden z-50 animate-fade-in">
+                      <div className="p-4 border-b border-[var(--border)] flex items-center justify-between bg-white">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-heading font-bold text-[var(--ink)] text-sm">Notifications</h4>
+                          {unreadCount > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-600">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
                         {unreadCount > 0 && (
                           <button
                             onClick={markAllAsRead}
@@ -217,7 +237,7 @@ export const Navbar = () => {
                           </button>
                         )}
                       </div>
-                      <div className="max-h-80 overflow-y-auto divide-y divide-[var(--border)]">
+                      <div className="max-h-[calc(100vh-8rem)] sm:max-h-80 overflow-y-auto divide-y divide-[var(--border)]">
                         {notifications.length === 0 ? (
                           <div className="p-6 text-center text-xs text-[var(--ink-muted)]">
                             No notifications yet.
@@ -260,7 +280,11 @@ export const Navbar = () => {
                 <div className="relative" ref={userRef}>
                   <button
                     type="button"
-                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    onClick={() => {
+                      setUserDropdownOpen((prev) => !prev);
+                      setNotifDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
                     className="flex items-center gap-2 p-1 pl-2 rounded-lg hover:bg-[var(--primary-soft)] transition-colors cursor-pointer border border-[var(--border)]"
                   >
                     <img
@@ -275,7 +299,7 @@ export const Navbar = () => {
                   </button>
 
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-[var(--border)] p-1.5 z-50 animate-fade-in">
+                    <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-1.5rem)] bg-white rounded-xl shadow-xl border border-[var(--border)] p-1.5 z-50 animate-fade-in">
                       <div className="px-3 py-2.5 border-b border-[var(--border)]">
                         <p className="text-xs font-bold text-[var(--ink)] truncate">{user?.name}</p>
                         <p className="text-[11px] text-[var(--ink-muted)] truncate">{user?.email}</p>
@@ -365,7 +389,11 @@ export const Navbar = () => {
 
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                setMobileMenuOpen((prev) => !prev);
+                setNotifDropdownOpen(false);
+                setUserDropdownOpen(false);
+              }}
               className="lg:hidden p-2 rounded-lg text-[var(--ink-muted)] hover:bg-[var(--primary-soft)]"
               aria-label="Open menu"
             >
