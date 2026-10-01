@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 import Service from '../models/Service.js';
@@ -304,6 +305,10 @@ export const getBookings = async (req, res, next) => {
 
 export const getBookingById = async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return sendError(res, 'Invalid booking ID format', [], 400);
+    }
+
     const booking = await Booking.findById(req.params.id)
       .populate('customer', 'name phone email avatar address')
       .populate('provider', 'name phone email avatar address')
@@ -316,9 +321,12 @@ export const getBookingById = async (req, res, next) => {
 
     // Access control: customer, provider, or admin only
     const userId = req.user.id.toString();
+    const customerId = (booking.customer?._id || booking.customer)?.toString();
+    const providerId = (booking.provider?._id || booking.provider)?.toString();
+
     const isAuthorized =
-      booking.customer._id.toString() === userId ||
-      booking.provider._id.toString() === userId ||
+      customerId === userId ||
+      providerId === userId ||
       req.user.role === ROLES.ADMIN;
 
     if (!isAuthorized) {
@@ -333,6 +341,10 @@ export const getBookingById = async (req, res, next) => {
 
 export const updateBookingStatus = async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return sendError(res, 'Invalid booking ID format', [], 400);
+    }
+
     const { status, note, cancellationReason } = req.body;
     const userId = req.user.id.toString();
     const booking = await Booking.findById(req.params.id);
@@ -341,8 +353,10 @@ export const updateBookingStatus = async (req, res, next) => {
       return sendError(res, 'Booking not found', [], 404);
     }
 
-    const isCustomer = booking.customer.toString() === userId;
-    const isProvider = booking.provider.toString() === userId;
+    const customerId = (booking.customer?._id || booking.customer)?.toString();
+    const providerId = (booking.provider?._id || booking.provider)?.toString();
+    const isCustomer = customerId === userId;
+    const isProvider = providerId === userId;
     const isAdmin = req.user.role === ROLES.ADMIN;
 
     if (!isCustomer && !isProvider && !isAdmin) {
@@ -428,11 +442,22 @@ export const updateBookingStatus = async (req, res, next) => {
 
 export const openBookingDispute = async (req, res, next) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return sendError(res, 'Invalid booking ID format', [], 400);
+    }
+
     const { reason, details } = req.body;
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
       return sendError(res, 'Booking not found', [], 404);
+    }
+
+    const userId = req.user.id.toString();
+    const customerId = (booking.customer?._id || booking.customer)?.toString();
+    const providerId = (booking.provider?._id || booking.provider)?.toString();
+    if (customerId !== userId && providerId !== userId && req.user.role !== ROLES.ADMIN) {
+      return sendError(res, 'Not authorized to dispute this booking', [], 403);
     }
 
     booking.status = BOOKING_STATUS.DISPUTED;

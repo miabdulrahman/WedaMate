@@ -30,7 +30,7 @@ export const bookingService = {
 
   async getBookingById(id) {
     const res = await apiClient(`/bookings/${id}`);
-    return res.data?.booking;
+    return res.data?.booking || res.data;
   },
 
   async updateBookingStatus(id, { status, note, cancellationReason }) {

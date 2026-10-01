@@ -56,7 +56,11 @@ export const BookingDetailPage = () => {
       setLoading(true);
       setError(null);
       const res = await bookingService.getBookingById(id);
-      setBooking(res.booking);
+      const bookingData = res?.booking || res;
+      if (!bookingData || !bookingData._id) {
+        throw new Error('Booking details could not be loaded');
+      }
+      setBooking(bookingData);
     } catch (err) {
       setError(err.message || 'Failed to load booking');
     } finally {
@@ -67,6 +71,12 @@ export const BookingDetailPage = () => {
   useEffect(() => {
     fetchBooking();
   }, [id]);
+
+  useEffect(() => {
+    if (booking && window.location.hash === '#review' && booking.status === 'completed' && !booking.hasReview) {
+      setReviewModalOpen(true);
+    }
+  }, [booking]);
 
   const handleCancelBooking = async () => {
     if (!cancelReason) {
@@ -146,9 +156,23 @@ export const BookingDetailPage = () => {
     );
   }
 
-  const isCustomer = user?.id === booking.customer?._id || user?.role === 'customer';
-  const otherParty = isCustomer ? booking.provider : booking.customer;
+  const isCustomer =
+    (user?._id && (booking.customer?._id === user._id || booking.customer === user._id)) ||
+    (user?.id && (booking.customer?._id === user.id || booking.customer === user.id)) ||
+    user?.role === 'customer';
+  const otherParty = isCustomer
+    ? (typeof booking.provider === 'object' && booking.provider ? booking.provider : {})
+    : (typeof booking.customer === 'object' && booking.customer ? booking.customer : {});
   const isDriver = booking.bookingType === 'driver';
+
+  const backUrl =
+    user?.role === 'provider'
+      ? '/provider/bookings'
+      : user?.role === 'driver'
+      ? '/driver/bookings'
+      : user?.role === 'admin'
+      ? '/admin/bookings'
+      : '/bookings';
 
   const statusVariantMap = {
     pending: 'warning',
@@ -163,7 +187,7 @@ export const BookingDetailPage = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Link
-        to="/bookings"
+        to={backUrl}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
@@ -252,11 +276,13 @@ export const BookingDetailPage = () => {
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                {new Date(booking.scheduledDate).toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                })}
+                {booking.scheduledDate
+                  ? new Date(booking.scheduledDate).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })
+                  : 'Date TBD'}
               </span>
             </div>
             <div className="flex items-center gap-2">

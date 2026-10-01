@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, User, Car, Shield, Wrench } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import Logo from '../../components/ui/Logo.jsx';
@@ -45,28 +45,6 @@ export const LoginPage = () => {
       setIsLoading(false);
     }
   };
-
-  const handleQuickDemoLogin = async (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    try {
-      setIsLoading(true);
-      const user = await login({ email: demoEmail, password: demoPass });
-      showToast(`Logged in as ${user.name} (${user.role})`, 'success');
-      routeAfterLogin(user);
-    } catch (err) {
-      showToast(err.message || 'Demo login failed', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const demos = [
-    { label: 'Customer', email: 'customer@wedamate.local', pass: 'customer123', icon: User },
-    { label: 'Driver', email: 'driver@wedamate.local', pass: 'driver123', icon: Car },
-    { label: 'Provider', email: 'nimal@wedamate.local', pass: 'provider123', icon: Wrench },
-    { label: 'Admin', email: 'admin@wedamate.local', pass: 'admin123', icon: Shield }
-  ];
 
   return (
     <div className="min-h-[calc(100vh-4.25rem)] flex items-stretch bg-[var(--surface)]">
@@ -174,28 +152,6 @@ export const LoginPage = () => {
               {isLoading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-
-          <div className="p-3.5 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-            <span className="text-[10px] font-bold text-[var(--ink-muted)] uppercase tracking-wider block mb-2.5 text-center">
-              Demo accounts
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {demos.map((demo) => {
-                const Icon = demo.icon;
-                return (
-                  <button
-                    key={demo.label}
-                    type="button"
-                    onClick={() => handleQuickDemoLogin(demo.email, demo.pass)}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white border border-[var(--border)] text-left hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] font-semibold text-xs text-[var(--ink)] transition-colors cursor-pointer"
-                  >
-                    <Icon className="w-3.5 h-3.5 text-[var(--primary)]" />
-                    {demo.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           <div className="text-center text-sm text-[var(--ink-muted)]">
             Don&apos;t have an account?{' '}
