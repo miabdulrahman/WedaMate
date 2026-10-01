@@ -14,7 +14,6 @@ import {
   DollarSign,
   Shield,
   Users,
-  CheckCircle,
   FolderTree,
   Star,
   AlertTriangle
@@ -40,8 +39,8 @@ export const Sidebar = ({ role = 'customer' }) => {
     { to: '/provider/quotes', label: 'Custom Quotes', icon: FileText },
     { to: '/provider/availability', label: 'Availability', icon: Clock },
     { to: '/provider/earnings', label: 'Earnings', icon: DollarSign },
-    { to: '/provider/profile', label: 'Provider Profile', icon: User },
-    { to: '/messages', label: 'Messages', icon: MessageSquare }
+    { to: '/provider/messages', label: 'Messages', icon: MessageSquare },
+    { to: '/provider/profile', label: 'Provider Profile', icon: User }
   ];
 
   const driverLinks = [
@@ -49,8 +48,8 @@ export const Sidebar = ({ role = 'customer' }) => {
     { to: '/driver/bookings', label: 'Driving Trips', icon: Calendar },
     { to: '/driver/availability', label: 'Driving Schedule', icon: Clock },
     { to: '/driver/earnings', label: 'Driver Earnings', icon: DollarSign },
-    { to: '/driver/profile', label: 'Driver Profile & License', icon: Car },
-    { to: '/messages', label: 'Messages', icon: MessageSquare }
+    { to: '/driver/messages', label: 'Messages', icon: MessageSquare },
+    { to: '/driver/profile', label: 'Driver Profile & License', icon: Car }
   ];
 
   const adminLinks = [
@@ -72,20 +71,25 @@ export const Sidebar = ({ role = 'customer' }) => {
   else if (role === 'provider' || isProvider) links = providerLinks;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200/80 min-h-[calc(100vh-4.5rem)] p-4 shrink-0 hidden md:block">
-      <div className="space-y-1">
+    <aside className="w-60 bg-white border-r border-[var(--border)] min-h-[calc(100vh-4.25rem)] p-3 shrink-0 hidden md:block">
+      <div className="space-y-0.5">
         {links.map((link) => {
           const Icon = link.icon;
           return (
             <NavLink
               key={link.to}
               to={link.to}
-              end={link.to === '/dashboard' || link.to === '/admin' || link.to === '/provider/dashboard' || link.to === '/driver/dashboard'}
+              end={
+                link.to === '/dashboard' ||
+                link.to === '/admin' ||
+                link.to === '/provider/dashboard' ||
+                link.to === '/driver/dashboard'
+              }
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-colors ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold text-xs tracking-wide transition-colors ${
                   isActive
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-[var(--primary)] text-white shadow-sm'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface)]'
                 }`
               }
             >

@@ -4,7 +4,7 @@ import { Home, Search, Calendar, MessageSquare, User, LayoutDashboard, Car, Wren
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export const MobileBottomNav = () => {
-  const { isAuthenticated, isProvider, isDriver, isAdmin } = useAuth();
+  const { isAuthenticated, isProvider, isDriver } = useAuth();
 
   const customerLinks = [
     { to: '/', label: 'Home', icon: Home, end: true },
@@ -35,7 +35,7 @@ export const MobileBottomNav = () => {
   else if (isProvider) links = providerLinks;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 flex items-center justify-around shadow-lg">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-[var(--border)] px-1 py-1.5 flex items-center justify-around">
       {links.map((link) => {
         const Icon = link.icon;
         return (
@@ -44,8 +44,8 @@ export const MobileBottomNav = () => {
             to={link.to}
             end={link.end}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center p-1.5 rounded-xl text-[10px] font-bold transition-all min-w-[56px] ${
-                isActive ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-800'
+              `flex flex-col items-center justify-center p-1.5 rounded-lg text-[10px] font-bold transition-all min-w-[56px] ${
+                isActive ? 'text-[var(--primary)]' : 'text-[var(--ink-muted)] hover:text-[var(--ink)]'
               }`
             }
           >

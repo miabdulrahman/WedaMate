@@ -28,6 +28,34 @@ export const providerService = {
   async getDashboardStats() {
     const res = await apiClient('/providers/dashboard-stats');
     return res.data;
+  },
+
+  async getMyProfile() {
+    const res = await apiClient('/providers/me');
+    return res.data?.profile;
+  },
+
+  async addService(serviceData) {
+    const res = await apiClient('/providers/services', {
+      method: 'POST',
+      body: serviceData
+    });
+    return res.data;
+  },
+
+  async updateService(serviceId, serviceData) {
+    const res = await apiClient(`/providers/services/${serviceId}`, {
+      method: 'PUT',
+      body: serviceData
+    });
+    return res.data;
+  },
+
+  async deleteService(serviceId) {
+    const res = await apiClient(`/providers/services/${serviceId}`, {
+      method: 'DELETE'
+    });
+    return res.data;
   }
 };
 

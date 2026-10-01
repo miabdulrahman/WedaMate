@@ -163,6 +163,38 @@ export const seedDatabase = async () => {
         { city: 'Wattala', district: 'Gampaha' }
       ],
       startingPrice: 2500,
+      services: [
+        {
+          title: 'Emergency Pipe Leak & Burst Repair',
+          category: categoryMap['home-services'],
+          categoryName: 'Home Services',
+          description: 'Rapid repair for burst pipes, leaking joints, and high-pressure water lines. Includes emergency diagnosis.',
+          price: 3500,
+          durationHours: 2,
+          pricingType: 'fixed',
+          isActive: true
+        },
+        {
+          title: 'Bathroom Fixture & Commode Installation',
+          category: categoryMap['home-services'],
+          categoryName: 'Home Services',
+          description: 'Full installation and sealing of bathroom taps, shower mixers, commodes, and basins.',
+          price: 4500,
+          durationHours: 3,
+          pricingType: 'fixed',
+          isActive: true
+        },
+        {
+          title: 'Water Pressure Pump Servicing & Wiring',
+          category: categoryMap['home-services'],
+          categoryName: 'Home Services',
+          description: 'Complete inspection, pressure switch adjustment, capacitor check, and impeller descaling.',
+          price: 5500,
+          durationHours: 2,
+          pricingType: 'fixed',
+          isActive: true
+        }
+      ],
       rating: 4.9,
       reviewCount: 38,
       jobsCompleted: 142,

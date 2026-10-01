@@ -18,6 +18,7 @@ import {
 import providerService from '../../services/providerService.js';
 import reviewService from '../../services/reviewService.js';
 import bookingService from '../../services/bookingService.js';
+import messageService from '../../services/messageService.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -79,9 +80,11 @@ export const ProviderDetailPage = () => {
     const calculate = async () => {
       if (!provider) return;
       try {
+        const resolvedProviderId = provider.user?._id || provider.user || provider._id;
         const res = await bookingService.calculatePrice({
           bookingType: 'service',
           serviceId: selectedServiceId || undefined,
+          providerId: resolvedProviderId,
           durationHours
         });
         setPriceBreakdown(res);
@@ -108,13 +111,14 @@ export const ProviderDetailPage = () => {
 
     try {
       setBookingSubmitting(true);
+      const resolvedProviderId = provider.user?._id || provider.user || provider._id;
       const booking = await bookingService.createBooking({
-        providerId: provider.user._id,
+        providerId: resolvedProviderId,
         bookingType: 'service',
         serviceId: selectedServiceId || undefined,
         scheduledDate,
         startTime,
-        durationHours,
+        durationHours: parseInt(durationHours) || 2,
         location: {
           address,
           city,
@@ -130,6 +134,32 @@ export const ProviderDetailPage = () => {
       showToast(err.message || 'Failed to submit booking', 'error');
     } finally {
       setBookingSubmitting(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!isAuthenticated) {
+      navigate(`/login?redirect=/providers/${id}`);
+      return;
+    }
+
+    const providerUserId = provider.user?._id || provider.user || provider._id;
+
+    if (providerUserId?.toString() === user?._id?.toString()) {
+      showToast('This is your own provider profile', 'info');
+      return;
+    }
+
+    try {
+      const conv = await messageService.startConversation(providerUserId);
+      const targetRoute = user?.role === 'provider' ? '/provider/messages' : '/messages';
+      if (conv?._id) {
+        navigate(`${targetRoute}/${conv._id}`);
+      } else {
+        navigate(targetRoute);
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to start chat', 'error');
     }
   };
 
@@ -198,7 +228,16 @@ export const ProviderDetailPage = () => {
           </div>
 
           {/* Quick CTAs */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+            <Button
+              variant="outline"
+              size="lg"
+              icon={MessageSquare}
+              onClick={handleStartChat}
+              className="flex-1 md:flex-none font-bold bg-white text-slate-800 hover:bg-slate-50 border-slate-300"
+            >
+              Message Provider
+            </Button>
             <Button
               variant="secondary"
               size="lg"
@@ -276,6 +315,56 @@ export const ProviderDetailPage = () => {
             </Card>
           )}
 
+          {/* Services & Offerings List */}
+          {provider.services?.length > 0 && (
+            <Card className="p-6">
+              <h3 className="font-bold text-slate-900 text-base mb-4">Direct Bookable Services</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {provider.services.map((svc) => (
+                  <div
+                    key={svc._id}
+                    className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-emerald-300 transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      {svc.image && (
+                        <div className="h-32 w-full rounded-lg overflow-hidden mb-2.5 bg-slate-100 border border-slate-100">
+                          <img src={svc.image} alt={svc.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm">{svc.title}</h4>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
+                          {svc.pricingType || 'fixed'}
+                        </span>
+                      </div>
+                      {svc.description && (
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{svc.description}</p>
+                      )}
+                      <div className="text-[11px] text-slate-400 mt-2">
+                        Est. Duration: {svc.durationHours || 2} hours
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                      <span className="text-sm font-black text-slate-900">
+                        LKR {svc.price?.toLocaleString()}
+                      </span>
+                      <Button
+                        size="xs"
+                        variant="secondary"
+                        onClick={() => {
+                          setSelectedServiceId(svc._id);
+                          setBookingModalOpen(true);
+                        }}
+                      >
+                        Book This
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Customer Reviews */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
@@ -348,6 +437,26 @@ export const ProviderDetailPage = () => {
         title={`Book Service with ${pUser.name}`}
       >
         <form onSubmit={handleBookingSubmit} className="space-y-4">
+          {provider.services?.length > 0 && (
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Selected Service / Package</label>
+              <select
+                value={selectedServiceId}
+                onChange={(e) => setSelectedServiceId(e.target.value)}
+                className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">
+                  General Trade Service (From LKR {provider.startingPrice?.toLocaleString()})
+                </option>
+                {provider.services.map((svc) => (
+                  <option key={svc._id} value={svc._id}>
+                    {svc.title} — LKR {svc.price?.toLocaleString()} ({svc.durationHours || 2} hrs)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">Scheduled Date *</label>
             <Input

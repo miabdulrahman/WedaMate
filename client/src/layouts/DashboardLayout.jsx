@@ -10,7 +10,7 @@ export const DashboardLayout = ({ role }) => {
   const activeRole = role || user?.role || 'customer';
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-[var(--surface)] text-[var(--ink)] pb-16 md:pb-0">
       <Navbar />
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <Sidebar role={activeRole} />

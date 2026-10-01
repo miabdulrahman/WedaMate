@@ -105,7 +105,15 @@ export const BookingCard = ({ booking, onStatusUpdate, currentRole = 'customer' 
             </Button>
           </Link>
 
-          <Link to={`/messages`}>
+          <Link
+            to={
+              currentRole === 'driver'
+                ? `/driver/messages?bookingId=${booking._id}`
+                : currentRole === 'provider'
+                ? `/provider/messages?bookingId=${booking._id}`
+                : `/messages?bookingId=${booking._id}`
+            }
+          >
             <Button variant="ghost" size="xs" icon={MessageSquare}>
               Chat
             </Button>

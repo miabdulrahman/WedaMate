@@ -1,48 +1,64 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export const Logo = ({ size = 'md', showTagline = false, to = '/', className = '' }) => {
+/**
+ * Temporary logo — replace /logo.png in client/public with your final brand mark.
+ */
+export const Logo = ({
+  size = 'md',
+  showTagline = false,
+  to = '/',
+  className = '',
+  wordmark = true,
+  theme = 'light'
+}) => {
   const sizeClasses = {
-    sm: { icon: 'w-6 h-6', text: 'text-base', sub: 'text-[9px]' },
-    md: { icon: 'w-8 h-8', text: 'text-xl', sub: 'text-[10px]' },
-    lg: { icon: 'w-10 h-10', text: 'text-2xl', sub: 'text-xs' },
-    xl: { icon: 'w-12 h-12', text: 'text-3xl', sub: 'text-sm' }
+    sm: { icon: 'w-8 h-8', text: 'text-base', sub: 'text-[9px]', gap: 'gap-2' },
+    md: { icon: 'w-9 h-9', text: 'text-lg', sub: 'text-[10px]', gap: 'gap-2.5' },
+    lg: { icon: 'w-11 h-11', text: 'text-2xl', sub: 'text-xs', gap: 'gap-3' },
+    xl: { icon: 'w-14 h-14', text: 'text-3xl', sub: 'text-sm', gap: 'gap-3.5' }
   };
 
   const selected = sizeClasses[size] || sizeClasses.md;
+  const isDark = theme === 'dark';
 
   const content = (
-    <div className={`flex items-center gap-2 select-none group ${className}`}>
-      {/* WedaMate Stylized 4-Leaf/Flower Emblem */}
-      <div className={`${selected.icon} flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}>
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          {/* 4 organic petals in emerald green matching reference mark */}
-          <circle cx="20" cy="11" r="7" fill="#059669" />
-          <circle cx="29" cy="20" r="7" fill="#10B981" />
-          <circle cx="20" cy="29" r="7" fill="#047857" />
-          <circle cx="11" cy="20" r="7" fill="#34D399" />
-          <circle cx="20" cy="20" r="4.5" fill="#FFFFFF" />
-          <circle cx="20" cy="20" r="2.5" fill="#065F46" />
-        </svg>
+    <div className={`flex items-center ${selected.gap} select-none group ${className}`}>
+      <div
+        className={`${selected.icon} shrink-0 overflow-hidden rounded-xl ring-1 ${
+          isDark ? 'ring-white/15 bg-white' : 'ring-[var(--border)] bg-white shadow-sm'
+        } transition-transform duration-300 group-hover:scale-[1.03]`}
+      >
+        <img
+          src="/logo.png"
+          alt="WedaMate"
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      <div className="flex flex-col leading-none">
-        <span className={`font-extrabold tracking-tight ${selected.text} flex items-center`}>
-          <span className="text-slate-900">Weda</span>
-          <span className="text-emerald-600">Mate</span>
-        </span>
-        {showTagline && (
-          <span className={`font-semibold text-slate-400 tracking-wide uppercase mt-0.5 ${selected.sub}`}>
-            Local Services, Made Easy.
+      {wordmark && (
+        <div className="flex flex-col leading-none min-w-0">
+          <span className={`font-heading font-bold tracking-tight ${selected.text}`}>
+            <span className={isDark ? 'text-white' : 'text-[var(--ink)]'}>Weda</span>
+            <span className={isDark ? 'text-[#5dcaa8]' : 'text-[var(--primary)]'}>Mate</span>
           </span>
-        )}
-      </div>
+          {showTagline && (
+            <span
+              className={`font-medium tracking-wide mt-1 ${selected.sub} ${
+                isDark ? 'text-[#8a9e96]' : 'text-[var(--ink-muted)]'
+              }`}
+            >
+              Local Services, Made Easy.
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 
   if (to) {
     return (
-      <Link to={to} className="inline-flex items-center hover:opacity-95 transition-opacity">
+      <Link to={to} className="inline-flex items-center hover:opacity-95 transition-opacity" aria-label="WedaMate home">
         {content}
       </Link>
     );

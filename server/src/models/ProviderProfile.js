@@ -35,6 +35,49 @@ const providerProfileSchema = new mongoose.Schema(
         trim: true
       }
     ],
+    services: [
+      {
+        title: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        category: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category'
+        },
+        categoryName: {
+          type: String,
+          default: ''
+        },
+        description: {
+          type: String,
+          default: ''
+        },
+        price: {
+          type: Number,
+          required: true,
+          default: 2500
+        },
+        durationHours: {
+          type: Number,
+          default: 2
+        },
+        pricingType: {
+          type: String,
+          enum: ['fixed', 'hourly', 'quote_based'],
+          default: 'fixed'
+        },
+        image: {
+          type: String,
+          default: ''
+        },
+        isActive: {
+          type: Boolean,
+          default: true
+        }
+      }
+    ],
     serviceAreas: [
       {
         city: { type: String, required: true },

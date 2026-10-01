@@ -103,7 +103,7 @@ function App() {
               <Route
                 element={
                   <ProtectedRoute>
-                    <DashboardLayout role="customer" />
+                    <DashboardLayout />
                   </ProtectedRoute>
                 }
               >
@@ -132,6 +132,8 @@ function App() {
                 <Route path="quotes" element={<ProviderQuotesPage />} />
                 <Route path="availability" element={<ProviderAvailabilityPage />} />
                 <Route path="earnings" element={<ProviderEarningsPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages/:conversationId" element={<MessagesPage />} />
                 <Route path="profile" element={<ProfilePage />} />
               </Route>
 
@@ -148,6 +150,8 @@ function App() {
                 <Route path="bookings" element={<BookingsPage />} />
                 <Route path="availability" element={<DriverProfilePage />} />
                 <Route path="earnings" element={<ProviderEarningsPage />} />
+                <Route path="messages" element={<MessagesPage />} />
+                <Route path="messages/:conversationId" element={<MessagesPage />} />
                 <Route path="profile" element={<DriverProfilePage />} />
               </Route>
 

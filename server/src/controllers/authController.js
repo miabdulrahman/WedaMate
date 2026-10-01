@@ -144,7 +144,7 @@ export const getMe = async (req, res, next) => {
 
 export const updateDetails = async (req, res, next) => {
   try {
-    const { name, phone, address, avatar } = req.body;
+    const { name, phone, address, avatar, providerDetails } = req.body;
     const user = await User.findById(req.user.id);
 
     if (name) user.name = name;
@@ -158,7 +158,21 @@ export const updateDetails = async (req, res, next) => {
     }
 
     await user.save();
-    return sendSuccess(res, 'Profile details updated successfully', { user });
+
+    if (user.role === ROLES.PROVIDER && providerDetails) {
+      const ProviderProfile = (await import('../models/ProviderProfile.js')).default;
+      let profile = await ProviderProfile.findOne({ user: user._id });
+      if (profile) {
+        if (providerDetails.businessName !== undefined) profile.businessName = providerDetails.businessName;
+        if (providerDetails.profession !== undefined) profile.profession = providerDetails.profession;
+        if (providerDetails.bio !== undefined) profile.bio = providerDetails.bio;
+        if (providerDetails.startingPrice !== undefined) profile.startingPrice = parseFloat(providerDetails.startingPrice);
+        await profile.save();
+      }
+    }
+
+    const updatedUser = await User.findById(user._id).populate('providerProfile driverProfile');
+    return sendSuccess(res, 'Profile details updated successfully', { user: updatedUser });
   } catch (error) {
     next(error);
   }

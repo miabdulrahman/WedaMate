@@ -10,13 +10,13 @@ import { BOOKING_STATUS, PAYMENT_STATUS, ROLES } from '../config/constants.js';
 
 export const calculateBookingPrice = async (req, res, next) => {
   try {
-    const { bookingType, serviceId, driverId, rateType = 'hourly', durationHours = 2 } = req.body;
+    const { bookingType, serviceId, providerId, driverId, rateType = 'hourly', durationHours = 2 } = req.body;
 
     let baseAmount = 0;
 
     if (bookingType === 'driver') {
       const driver = await DriverProfile.findOne({
-        $or: [{ _id: driverId }, { user: driverId }]
+        $or: [{ _id: driverId || providerId }, { user: driverId || providerId }]
       });
 
       if (!driver) {
@@ -31,11 +31,30 @@ export const calculateBookingPrice = async (req, res, next) => {
         baseAmount = (driver.hourlyRate || 1200) * Math.max(1, parseInt(durationHours));
       }
     } else {
-      const service = await Service.findById(serviceId);
-      if (!service) {
-        return sendError(res, 'Service not found', [], 404);
+      let foundService = null;
+      if (serviceId) {
+        foundService = await Service.findById(serviceId);
       }
-      baseAmount = service.basePrice || 2500;
+
+      if (foundService) {
+        baseAmount = foundService.basePrice;
+      } else if (providerId) {
+        const provider = await ProviderProfile.findOne({
+          $or: [{ _id: providerId }, { user: providerId }]
+        });
+        if (provider) {
+          const customSvc = provider.services?.id(serviceId);
+          if (customSvc) {
+            baseAmount = customSvc.price;
+          } else {
+            baseAmount = (provider.startingPrice || 2500) * Math.max(1, parseInt(durationHours || 1));
+          }
+        }
+      }
+
+      if (!baseAmount) {
+        baseAmount = 2500;
+      }
     }
 
     const feeCalculation = await paymentService.calculateFees(baseAmount);
@@ -64,15 +83,35 @@ export const createBooking = async (req, res, next) => {
       return sendError(res, 'Please provide provider, scheduled date, start time, and location address', [], 400);
     }
 
+    // Resolve provider User ID (in case caller passed ProviderProfile._id or DriverProfile._id)
+    let providerUserId = providerId;
+    const providerUser = await User.findById(providerId);
+    if (!providerUser) {
+      const pProfile = await ProviderProfile.findById(providerId);
+      if (pProfile) {
+        providerUserId = pProfile.user;
+      } else {
+        const dProfile = await DriverProfile.findById(providerId);
+        if (dProfile) {
+          providerUserId = dProfile.user;
+        } else {
+          return sendError(res, 'Provider or driver account not found', [], 404);
+        }
+      }
+    }
+
     const dateObj = new Date(scheduledDate);
-    dateObj.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(dateObj);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateObj);
+    endOfDay.setHours(23, 59, 59, 999);
 
     // Double-booking check: verify provider doesn't already have an active booking at the same date & time slot
     const existingConflict = await Booking.findOne({
-      provider: providerId,
+      provider: providerUserId,
       scheduledDate: {
-        $gte: new Date(dateObj),
-        $lt: new Date(dateObj.getTime() + 24 * 60 * 60 * 1000)
+        $gte: startOfDay,
+        $lte: endOfDay
       },
       startTime,
       status: { $in: [BOOKING_STATUS.PENDING, BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.IN_PROGRESS] }
@@ -89,10 +128,11 @@ export const createBooking = async (req, res, next) => {
 
     let price = 0;
     let serviceSnapshot = {};
+    let resolvedServiceId = null;
 
     if (bookingType === 'driver') {
       const driver = await DriverProfile.findOne({
-        $or: [{ _id: providerId }, { user: providerId }]
+        $or: [{ _id: providerId }, { user: providerUserId }]
       });
 
       if (!driver) {
@@ -107,27 +147,66 @@ export const createBooking = async (req, res, next) => {
       } else {
         price = (driver.hourlyRate || 1200) * Math.max(1, parseInt(durationHours));
       }
-    } else {
-      const service = await Service.findById(serviceId).populate('category', 'name');
-      if (!service) {
-        return sendError(res, 'Selected service not found', [], 404);
-      }
-      price = service.basePrice;
       serviceSnapshot = {
-        title: service.title,
-        categoryName: service.category?.name || 'Local Service',
-        pricingType: service.pricingType,
-        unitPrice: service.basePrice
+        title: 'Drive My Vehicle',
+        categoryName: 'Driver Service',
+        pricingType: rateType,
+        unitPrice: price
       };
+    } else {
+      let foundService = null;
+      if (serviceId) {
+        foundService = await Service.findById(serviceId).populate('category', 'name');
+      }
+
+      const pProfile = await ProviderProfile.findOne({ user: providerUserId }).populate('categories', 'name');
+
+      if (foundService) {
+        resolvedServiceId = foundService._id;
+        price = foundService.basePrice;
+        serviceSnapshot = {
+          title: foundService.title,
+          categoryName: foundService.category?.name || 'Local Service',
+          pricingType: foundService.pricingType,
+          unitPrice: foundService.basePrice
+        };
+      } else if (pProfile) {
+        const customSvc = pProfile.services?.id(serviceId);
+        if (customSvc) {
+          price = customSvc.price;
+          serviceSnapshot = {
+            title: customSvc.title,
+            categoryName: pProfile.categories?.[0]?.name || 'Local Service',
+            pricingType: customSvc.pricingType || 'fixed',
+            unitPrice: customSvc.price
+          };
+        } else {
+          price = (pProfile.startingPrice || 2500) * Math.max(1, parseInt(durationHours || 1));
+          serviceSnapshot = {
+            title: pProfile.profession || pProfile.businessName || 'Service Booking',
+            categoryName: pProfile.categories?.[0]?.name || 'Home Services',
+            pricingType: pProfile.pricingType || 'quote_based',
+            unitPrice: pProfile.startingPrice || 2500
+          };
+        }
+      } else {
+        price = 2500;
+        serviceSnapshot = {
+          title: 'Home Service',
+          categoryName: 'General',
+          pricingType: 'fixed',
+          unitPrice: 2500
+        };
+      }
     }
 
     const fees = await paymentService.calculateFees(price);
 
     const booking = await Booking.create({
       customer: customerId,
-      provider: providerId,
+      provider: providerUserId,
       bookingType,
-      service: serviceId || null,
+      service: resolvedServiceId,
       serviceSnapshot,
       driverDetails: driverDetails || {},
       location,
@@ -156,7 +235,7 @@ export const createBooking = async (req, res, next) => {
     const customer = await User.findById(customerId);
     const bookingTitle = bookingType === 'driver' ? 'Drive My Vehicle Request' : (serviceSnapshot.title || 'Service Booking');
     await notificationService.createNotification({
-      recipient: providerId,
+      recipient: providerUserId,
       sender: customerId,
       type: 'booking_request',
       title: `New Booking Request: ${bookingTitle}`,

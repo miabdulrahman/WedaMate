@@ -199,8 +199,16 @@ export const BookingDetailPage = () => {
               {booking.status?.toUpperCase()}
             </Badge>
 
-            <Link to="/messages">
-              <Button variant="outline" size="sm" icon={MessageSquare}>
+            <Link
+              to={
+                user?.role === 'provider'
+                  ? `/provider/messages?bookingId=${booking._id}`
+                  : user?.role === 'driver'
+                  ? `/driver/messages?bookingId=${booking._id}`
+                  : `/messages?bookingId=${booking._id}`
+              }
+            >
+              <Button variant="primary" size="sm" icon={MessageSquare}>
                 Chat
               </Button>
             </Link>
@@ -216,12 +224,26 @@ export const BookingDetailPage = () => {
               alt={otherParty?.name}
               className="w-12 h-12 rounded-xl object-cover border border-slate-200"
             />
-            <div>
+            <div className="flex-1 min-w-0">
               <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
                 {isCustomer ? 'Service Provider / Driver' : 'Customer'}
               </span>
-              <h4 className="font-bold text-slate-900 text-sm">{otherParty?.name}</h4>
+              <h4 className="font-bold text-slate-900 text-sm truncate">{otherParty?.name}</h4>
               <p className="text-xs text-slate-500 mt-0.5">{otherParty?.phone || 'Phone hidden for privacy'}</p>
+              <Link
+                to={
+                  user?.role === 'provider'
+                    ? `/provider/messages?bookingId=${booking._id}`
+                    : user?.role === 'driver'
+                    ? `/driver/messages?bookingId=${booking._id}`
+                    : `/messages?bookingId=${booking._id}`
+                }
+                className="inline-block mt-2"
+              >
+                <Button variant="outline" size="xs" icon={MessageSquare}>
+                  Message {isCustomer ? 'Provider' : 'Customer'}
+                </Button>
+              </Link>
             </div>
           </div>
 

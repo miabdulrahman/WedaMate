@@ -327,3 +327,69 @@ test('9. Reviews - Submit review on completed booking and prevent duplicate', as
   assert.equal(resDup.status, 409);
   assert.equal(resDup.body.success, false);
 });
+
+test('10. Provider Services - Add, update and delete provider services', async () => {
+  // Add service
+  const resAdd = await request(app)
+    .post('/api/providers/services')
+    .set('Authorization', `Bearer ${providerToken}`)
+    .send({
+      title: 'Water Heater Installation',
+      price: 4500,
+      durationHours: 3,
+      description: 'Complete plumbing and electrical connection for solar water heaters'
+    });
+
+  assert.equal(resAdd.status, 201);
+  assert.equal(resAdd.body.success, true);
+  assert.equal(resAdd.body.data.service.title, 'Water Heater Installation');
+  const serviceId = resAdd.body.data.service._id;
+
+  // Update service
+  const resUpdate = await request(app)
+    .put(`/api/providers/services/${serviceId}`)
+    .set('Authorization', `Bearer ${providerToken}`)
+    .send({
+      price: 5000
+    });
+
+  assert.equal(resUpdate.status, 200);
+  assert.equal(resUpdate.body.success, true);
+  assert.equal(resUpdate.body.data.service.price, 5000);
+
+  // Delete service
+  const resDelete = await request(app)
+    .delete(`/api/providers/services/${serviceId}`)
+    .set('Authorization', `Bearer ${providerToken}`);
+
+  assert.equal(resDelete.status, 200);
+  assert.equal(resDelete.body.success, true);
+});
+
+test('11. Direct Provider Booking - Customer can book provider without passing serviceId', async () => {
+  const nextMonth = new Date();
+  nextMonth.setDate(nextMonth.getDate() + 25);
+
+  const res = await request(app)
+    .post('/api/bookings')
+    .set('Authorization', `Bearer ${customerToken}`)
+    .send({
+      providerId,
+      bookingType: 'service',
+      scheduledDate: nextMonth.toISOString().split('T')[0],
+      startTime: '16:00',
+      durationHours: 2,
+      location: {
+        address: '15 Porutota Road',
+        city: 'Negombo',
+        district: 'Gampaha'
+      },
+      notes: 'General plumbing inspection'
+    });
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(res.body.data.booking.bookingType, 'service');
+  assert.ok(res.body.data.booking.totalAmount > 0);
+});
+

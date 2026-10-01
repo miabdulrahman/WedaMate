@@ -1,6 +1,8 @@
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import Booking from '../models/Booking.js';
+import User from '../models/User.js';
+import ProviderProfile from '../models/ProviderProfile.js';
 import notificationService from '../services/notificationService.js';
 import { sendSuccess, sendError } from '../utils/apiResponse.js';
 
@@ -21,6 +23,84 @@ export const getConversations = async (req, res, next) => {
   }
 };
 
+export const startDirectConversation = async (req, res, next) => {
+  try {
+    const senderId = req.user.id;
+    const { recipientId, initialMessage } = req.body;
+
+    if (!recipientId) {
+      return sendError(res, 'Recipient ID is required', [], 400);
+    }
+
+    let targetUserId = recipientId;
+    let targetUser = await User.findById(recipientId);
+
+    // If recipient is a ProviderProfile ID, look up its user
+    if (!targetUser) {
+      const profile = await ProviderProfile.findById(recipientId);
+      if (profile && profile.user) {
+        targetUserId = profile.user.toString();
+        targetUser = await User.findById(targetUserId);
+      }
+    }
+
+    if (!targetUser) {
+      return sendError(res, 'Recipient user not found', [], 404);
+    }
+
+    if (targetUserId.toString() === senderId.toString()) {
+      return sendError(res, 'You cannot message yourself', [], 400);
+    }
+
+    // Find existing direct conversation between sender and target
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, targetUserId] }
+    })
+      .populate('participants', 'name avatar role')
+      .populate('booking', 'bookingType serviceSnapshot status scheduledDate');
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, targetUserId],
+        lastMessage: initialMessage || 'Conversation started',
+        lastMessageAt: new Date()
+      });
+
+      conversation = await Conversation.findById(conversation._id)
+        .populate('participants', 'name avatar role')
+        .populate('booking', 'bookingType serviceSnapshot status scheduledDate');
+    }
+
+    // If an initial message was provided, create and send it
+    if (initialMessage && initialMessage.trim()) {
+      const message = await Message.create({
+        conversation: conversation._id,
+        sender: senderId,
+        receiver: targetUserId,
+        text: initialMessage.trim(),
+        read: false
+      });
+
+      conversation.lastMessage = initialMessage.trim();
+      conversation.lastMessageAt = new Date();
+      await conversation.save();
+
+      await notificationService.createNotification({
+        recipient: targetUserId,
+        sender: senderId,
+        type: 'new_message',
+        title: `New message from ${req.user.name}`,
+        message: initialMessage.trim().slice(0, 60),
+        link: '/messages'
+      });
+    }
+
+    return sendSuccess(res, 'Conversation ready', { conversation }, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getOrCreateBookingConversation = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -31,28 +111,30 @@ export const getOrCreateBookingConversation = async (req, res, next) => {
       return sendError(res, 'Booking not found', [], 404);
     }
 
-    // Check if current user is customer or provider
+    // Check if current user is customer, provider, or admin
     const isParticipant =
-      booking.customer.toString() === userId || booking.provider.toString() === userId;
+      booking.customer?.toString() === userId.toString() ||
+      booking.provider?.toString() === userId.toString() ||
+      req.user.role === 'admin';
     if (!isParticipant) {
       return sendError(res, 'Not authorized to access messages for this booking', [], 403);
     }
 
     let conversation = await Conversation.findOne({ booking: bookingId })
-      .populate('participants', 'name avatar role')
-      .populate('booking', 'bookingType serviceSnapshot status scheduledDate');
+      .populate('participants', 'name avatar role phone')
+      .populate('booking', 'bookingType serviceSnapshot status scheduledDate startTime totalAmount');
 
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [booking.customer, booking.provider],
         booking: bookingId,
-        lastMessage: 'Conversation opened',
+        lastMessage: 'Conversation opened for booking',
         lastMessageAt: new Date()
       });
 
       conversation = await Conversation.findById(conversation._id)
-        .populate('participants', 'name avatar role')
-        .populate('booking', 'bookingType serviceSnapshot status scheduledDate');
+        .populate('participants', 'name avatar role phone')
+        .populate('booking', 'bookingType serviceSnapshot status scheduledDate startTime totalAmount');
     }
 
     return sendSuccess(res, 'Conversation retrieved', { conversation });
@@ -71,7 +153,7 @@ export const getMessages = async (req, res, next) => {
       return sendError(res, 'Conversation not found', [], 404);
     }
 
-    if (!conversation.participants.some(p => p.toString() === userId)) {
+    if (!conversation.participants.some(p => p.toString() === userId) && req.user.role !== 'admin') {
       return sendError(res, 'Not authorized to view messages in this conversation', [], 403);
     }
 
@@ -125,13 +207,23 @@ export const sendMessage = async (req, res, next) => {
     conversation.lastMessageAt = new Date();
     await conversation.save();
 
+    // Determine receiver role to build appropriate in-app route link
+    const receiverUser = await User.findById(receiverId).select('role name');
+    const receiverRole = receiverUser?.role || 'customer';
+    let link = `/messages?conversationId=${conversationId}`;
+    if (receiverRole === 'provider') {
+      link = `/provider/messages?conversationId=${conversationId}`;
+    } else if (receiverRole === 'driver') {
+      link = `/driver/messages?conversationId=${conversationId}`;
+    }
+
     await notificationService.createNotification({
       recipient: receiverId,
       sender: senderId,
       type: 'new_message',
       title: `New message from ${req.user.name}`,
-      message: text ? text.slice(0, 60) : 'Sent you an attachment.',
-      link: '/messages'
+      message: text ? text.slice(0, 80) : 'Sent you an attachment.',
+      link
     });
 
     const populated = await Message.findById(message._id)

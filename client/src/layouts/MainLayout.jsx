@@ -6,7 +6,7 @@ import MobileBottomNav from '../components/layout/MobileBottomNav.jsx';
 
 export const MainLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-16 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-[var(--surface)] text-[var(--ink)] pb-16 md:pb-0">
       <Navbar />
       <main className="flex-1">
         <Outlet />

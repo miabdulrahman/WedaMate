@@ -8,16 +8,16 @@ export const Badge = ({
   className = ''
 }) => {
   const variants = {
-    default: 'bg-slate-100 text-slate-700 border-slate-200',
-    primary: 'bg-slate-900 text-white border-slate-900',
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
+    default: 'bg-[#eef2f0] text-[var(--ink-muted)] border-[var(--border)]',
+    primary: 'bg-[var(--ink)] text-white border-[var(--ink)]',
+    success: 'bg-[var(--primary-muted)] text-[var(--primary)] border-[#b8dfd2]',
+    emerald: 'bg-[var(--primary-muted)] text-[var(--primary)] border-[#b8dfd2]',
+    warning: 'bg-amber-50 text-amber-800 border-amber-200',
     danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    info: 'bg-sky-50 text-sky-700 border-sky-200',
-    orange: 'bg-orange-50 text-orange-700 border-orange-200',
-    verified: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold',
-    driver: 'bg-sky-50 text-sky-800 border-sky-300 font-semibold'
+    info: 'bg-sky-50 text-sky-800 border-sky-200',
+    orange: 'bg-orange-50 text-orange-800 border-orange-200',
+    verified: 'bg-[var(--primary-muted)] text-[var(--primary-hover)] border-[#a8d5c6] font-semibold',
+    driver: 'bg-[#e8f3f0] text-[var(--primary)] border-[#b8dfd2] font-semibold'
   };
 
   const sizes = {
@@ -28,7 +28,7 @@ export const Badge = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-medium border leading-none shrink-0 select-none ${
+      className={`inline-flex items-center gap-1.5 rounded-md font-medium border leading-none shrink-0 select-none ${
         variants[variant] || variants.default
       } ${sizes[size] || sizes.sm} ${className}`}
     >

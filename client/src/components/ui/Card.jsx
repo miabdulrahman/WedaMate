@@ -19,12 +19,12 @@ export const Card = ({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border border-slate-200/80 transition-all duration-200 ${
-        glass ? 'glass-card' : 'bg-white'
+      className={`rounded-2xl border border-[var(--border)] transition-all duration-200 ${
+        glass ? 'glass-panel' : 'bg-white'
       } ${
         hover
-          ? 'hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
-          : 'shadow-xs'
+          ? 'hover:border-[var(--border-strong)] hover:shadow-md hover:-translate-y-0.5 cursor-pointer card-shadow'
+          : 'card-shadow'
       } ${paddings[padding] || paddings.default} ${className}`}
       {...props}
     >

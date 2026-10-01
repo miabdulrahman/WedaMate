@@ -3,8 +3,9 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 export const apiClient = async (endpoint, options = {}) => {
   const token = localStorage.getItem('wedamate_token');
 
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers
   };
 
@@ -23,7 +24,13 @@ export const apiClient = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, config);
-    const data = await response.json();
+    const text = await response.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { message: text || response.statusText };
+    }
 
     if (!response.ok || data.success === false) {
       const errorMessage = data.message || (data.errors && data.errors[0]) || 'Network request failed';

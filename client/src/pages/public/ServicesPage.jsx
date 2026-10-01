@@ -1,12 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, MapPin, Filter, Star, CheckCircle, ArrowUpDown, X, Wrench, SlidersHorizontal } from 'lucide-react';
+import {
+  Search,
+  MapPin,
+  Filter,
+  Star,
+  CheckCircle,
+  ArrowUpDown,
+  X,
+  Wrench,
+  SlidersHorizontal,
+  Sparkles,
+  Car,
+  Hammer,
+  GraduationCap,
+  Laptop,
+  Camera,
+  Truck,
+  Trees,
+  Scissors,
+  Layers
+} from 'lucide-react';
 import providerService from '../../services/providerService.js';
 import serviceService from '../../services/serviceService.js';
 import ProviderCard from '../../components/cards/ProviderCard.jsx';
 import ServiceCard from '../../components/cards/ServiceCard.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { Skeleton, EmptyState, ErrorState } from '../../components/ui/FeedbackStates.jsx';
+
+const getCategoryIcon = (iconName) => {
+  switch (iconName?.toLowerCase()) {
+    case 'car':
+      return Car;
+    case 'hammer':
+      return Hammer;
+    case 'sparkles':
+      return Sparkles;
+    case 'graduationcap':
+      return GraduationCap;
+    case 'laptop':
+      return Laptop;
+    case 'camera':
+      return Camera;
+    case 'truck':
+      return Truck;
+    case 'trees':
+    case 'tree':
+      return Trees;
+    case 'scissors':
+      return Scissors;
+    case 'wrench':
+    default:
+      return Wrench;
+  }
+};
 
 export const ServicesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -102,7 +149,11 @@ export const ServicesPage = () => {
   };
 
   const clearAllFilters = () => {
-    setSearchParams(new URLSearchParams());
+    const newParams = new URLSearchParams();
+    if (activeTab === 'catalog') {
+      newParams.set('tab', 'catalog');
+    }
+    setSearchParams(newParams);
   };
 
   const sriLankanCities = [
@@ -160,7 +211,7 @@ export const ServicesPage = () => {
       </div>
 
       {/* Main Search Bar & Quick Filters Bar */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs mb-8">
+      <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs mb-4">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Keyword Search */}
           <div className="flex items-center gap-2.5 px-3 py-2 flex-1 w-full bg-slate-50 rounded-xl">
@@ -218,6 +269,41 @@ export const ServicesPage = () => {
             Filters
           </Button>
         </div>
+      </div>
+
+      {/* Category Quick Chips Carousel */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-8 no-scrollbar scroll-smooth">
+        <button
+          type="button"
+          onClick={() => updateParam('category', '')}
+          className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            !category
+              ? 'bg-emerald-800 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>All Categories</span>
+        </button>
+        {categories.map((cat) => {
+          const Icon = getCategoryIcon(cat.icon);
+          const isSelected = category === cat.slug;
+          return (
+            <button
+              key={cat.slug}
+              type="button"
+              onClick={() => updateParam('category', isSelected ? '' : cat.slug)}
+              className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-emerald-800 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-emerald-700'}`} />
+              <span>{cat.name}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Content Layout (Sidebar Filters + Results Grid) */}
@@ -376,6 +462,120 @@ export const ServicesPage = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Filter Slide-out Modal */}
+      {mobileFilterOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/50 backdrop-blur-xs lg:hidden animate-fade-in">
+          <div className="w-full max-w-xs bg-white h-full shadow-2xl flex flex-col p-6 overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-emerald-700" />
+                <h3 className="font-bold text-slate-900 text-base">Filter Results</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileFilterOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Category Filter */}
+            <div className="mb-6">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2.5">
+                Service Category
+              </label>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateParam('category', '');
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    !category ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  All Categories
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => {
+                      updateParam('category', cat.slug);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center justify-between ${
+                      category === cat.slug
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Location selector */}
+            <div className="mb-6 pt-4 border-t border-slate-100">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2.5">
+                Location
+              </label>
+              <select
+                value={city || 'All Sri Lanka'}
+                onChange={(e) => updateParam('city', e.target.value === 'All Sri Lanka' ? '' : e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none"
+              >
+                {sriLankanCities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Verified Only */}
+            <div className="mb-6 pt-4 border-t border-slate-100">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  Verified Only
+                </span>
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => updateParam('verifiedOnly', e.target.checked ? 'true' : '')}
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            {/* Action buttons */}
+            <div className="mt-auto pt-6 border-t border-slate-100 flex gap-3">
+              <Button
+                variant="outline"
+                size="md"
+                className="w-1/2"
+                onClick={() => {
+                  clearAllFilters();
+                  setMobileFilterOpen(false);
+                }}
+              >
+                Reset
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                className="w-1/2"
+                onClick={() => setMobileFilterOpen(false)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

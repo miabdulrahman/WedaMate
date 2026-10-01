@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.get('/', getServices);
 router.get('/:slug', getServiceBySlug);
-router.post('/', protect, authorize(ROLES.ADMIN), createService);
+router.post('/', protect, authorize(ROLES.ADMIN, ROLES.PROVIDER), createService);
 router.put('/:id', protect, authorize(ROLES.ADMIN), updateService);
 router.delete('/:id', protect, authorize(ROLES.ADMIN), deleteService);
 

@@ -10,6 +10,7 @@ import app from './app.js';
 import { connectDB, closeDB } from './config/db.js';
 import User from './models/User.js';
 import { seedDatabase } from './seed/seed.js';
+import { ensureInitialData } from './seed/safeSeed.js';
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,6 +23,9 @@ const startServer = async () => {
     if (userCount === 0) {
       console.log('📦 Empty database detected. Auto-populating WedaMate seed dataset...');
       await seedDatabase();
+    } else {
+      // Ensure essential catalog data (categories, platform settings, services) exist without touching user accounts
+      await ensureInitialData();
     }
 
     const server = app.listen(PORT, () => {

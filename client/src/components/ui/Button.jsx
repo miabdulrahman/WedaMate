@@ -14,23 +14,23 @@ export const Button = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+    'inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
   const variants = {
     primary:
-      'bg-slate-900 hover:bg-slate-800 text-white shadow-sm hover:shadow active:bg-slate-950 border border-slate-900',
+      'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-sm border border-transparent',
     secondary:
-      'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow active:bg-emerald-800 border border-emerald-600',
+      'bg-[var(--ink)] hover:bg-[#0c1613] text-white shadow-sm border border-transparent',
     accent:
-      'bg-orange-500 hover:bg-orange-600 text-white shadow-sm hover:shadow active:bg-orange-700 border border-orange-500',
+      'bg-[var(--accent)] hover:bg-[var(--primary)] text-white shadow-sm border border-transparent',
     outline:
-      'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 hover:border-slate-400 active:bg-slate-100',
+      'bg-white hover:bg-[var(--primary-soft)] text-[var(--ink)] border border-[var(--border-strong)] hover:border-[var(--primary)]',
     ghost:
-      'bg-transparent hover:bg-slate-100 text-slate-700 hover:text-slate-900 active:bg-slate-200',
+      'bg-transparent hover:bg-[var(--primary-muted)] text-[var(--ink-muted)] hover:text-[var(--ink)]',
     danger:
-      'bg-rose-600 hover:bg-rose-700 text-white shadow-sm hover:shadow active:bg-rose-800 border border-rose-600',
+      'bg-rose-600 hover:bg-rose-700 text-white shadow-sm border border-transparent',
     success:
-      'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow border border-emerald-600'
+      'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-sm border border-transparent'
   };
 
   const sizes = {

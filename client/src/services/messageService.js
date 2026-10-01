@@ -6,6 +6,14 @@ export const messageService = {
     return res.data?.conversations || [];
   },
 
+  async startConversation(recipientId, initialMessage = '') {
+    const res = await apiClient('/messages/start', {
+      method: 'POST',
+      body: { recipientId, initialMessage }
+    });
+    return res.data?.conversation;
+  },
+
   async getBookingConversation(bookingId) {
     const res = await apiClient(`/messages/booking/${bookingId}`);
     return res.data?.conversation;
